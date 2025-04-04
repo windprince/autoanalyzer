@@ -1,0 +1,103 @@
+/* Main styling for AutoAnalyzer app */
+
+.recommendation-card {
+    margin-bottom: 15px;
+    transition: transform 0.2s;
+    border-left: 4px solid #0d6efd;
+}
+
+.recommendation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.confidence-indicator {
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(to right, #f8d7da, #d1e7dd);
+    margin-bottom: 10px;
+}
+
+.confidence-level {
+    height: 100%;
+    border-radius: 4px;
+    background-color: #20c997;
+}
+
+.categorical-column {
+    color: #0d6efd;
+}
+
+.numeric-column {
+    color: #198754;
+}
+
+.text-column {
+    color: #6c757d;
+}
+
+.datetime-column {
+    color: #dc3545;
+}
+
+.quality-issue {
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    background-color: #fff3cd;
+    border-left: 3px solid #ffc107;
+}
+
+/* Run Analysis Panel styling */
+.analysis-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 600px;
+    height: 100%;
+    background: white;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+    padding: 20px;
+    overflow-y: auto;
+    z-index: 1000;
+    transition: transform 0.3s ease-out;
+    transform: translateX(100%);
+}
+
+.analysis-panel.open {
+    transform: translateX(0);
+}
+
+/* Visualizations styling */
+.visualizations-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.visualization-item {
+    flex: 1 0 100%;
+    margin-bottom: 15px;
+}
+
+.analysis-image {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.panel-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* Feature Enhancement note styling */
+.coming-soon {
+    opacity: 0.6;
+}

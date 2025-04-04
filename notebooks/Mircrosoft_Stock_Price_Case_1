@@ -1,0 +1,912 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "qYguhvOlTlFJ"
+   },
+   "source": [
+    "# Microsoft Stock Price Case Study"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "XNsQZ1xNusNI"
+   },
+   "source": [
+    "## Context\n",
+    "\n",
+    "Companies' worth or its total market value is called market capitalization or market cap. It is equal to the share price multiplied by the number of shares outstanding. Stock price is a proportional and relative  value of companies' growth. Here, analysing the stock price data will help us to understand a company's growth. Increase in stock price increases the company's market value."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "1b4Wmz2fuvSW"
+   },
+   "source": [
+    "## Problem statement\n",
+    "\n",
+    "We have Collected the latest data of Microsoft Stock price and calculated daily log return which is approximately  normally distributed. Let us try to answer some of the question that will help us to decide roughly whether to invest in the Microsoft shares or not?\n",
+    "\n",
+    "a) What is the probability that the stock price will drop over 5% in a day? \n",
+    "\n",
+    "b) What is the probability that the stock price will drop over 10% in a day?\n",
+    " \n",
+    "c) What is the probability that the stock price will drop over 50% in a year? \n",
+    "\n",
+    "d) What is the probability that the stock price will drop over 25% in a year?\n",
+    "\n",
+    "e) What is the 50th percentile  of the yearly stock price?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "qRvk2yIeuzhl"
+   },
+   "source": [
+    "## Data Description\n",
+    "\n",
+    "Stock price data of Microsoft  is collected from [Yahoo finance](https://finance.yahoo.com/quote/MSFT/history/?guccounter=1&guce_referrer=aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8&guce_referrer_sig=AQAAACSI6SR_7Lby3ssAYvSwbF4Vrasme85BzSE1On02J71Ft-9OAY7hldPaYfYfqY4cCXkAj2PzEpzcLOBo3Usc4RC37eM4jZI5bqXmsXoAdEWXXDKLtJpZI4GK2EAXM8HRWFhkkkUckOoyxvcw66UVWlAnUMRswLPnIPNivRXivisH). It has four main attributes, as follows:\n",
+    "\n",
+    "1. **Date:** Date of the stock price records.\n",
+    "\n",
+    "2. **Open:** The average value of opened price on a particular day.\n",
+    "\n",
+    "3. **Close:**  The average value of closed  price on a particular day.\n",
+    "\n",
+    "4. **Low:** The lowest price reached on a particular day.\n",
+    "\n",
+    "5. **High:** The highest price reached on a particular day."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "74H1TQUju5Cx"
+   },
+   "source": [
+    "### Importing libraries "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "id": "PZCzw9HGupYm"
+   },
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "import seaborn as sns\n",
+    "#%matplotlib inline\n",
+    "\n",
+    "# importing normal distribution functions\n",
+    "from scipy.stats import norm "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "rx8Lxdtwu_6N"
+   },
+   "source": [
+    "\n",
+    "### Reading the Data into the Dataframe"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/",
+     "height": 206
+    },
+    "id": "o2uGcZEuvIB_",
+    "outputId": "0e06ccc5-66bc-4e60-9adf-80f1f0ce827c"
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "  <div id=\"df-734e9f8d-3765-402c-8232-764491ef4679\">\n",
+       "    <div class=\"colab-df-container\">\n",
+       "      <div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>Date</th>\n",
+       "      <th>Open</th>\n",
+       "      <th>High</th>\n",
+       "      <th>Low</th>\n",
+       "      <th>Close</th>\n",
+       "      <th>Adj Close</th>\n",
+       "      <th>Volume</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>2020-01-10</td>\n",
+       "      <td>162.820007</td>\n",
+       "      <td>163.220001</td>\n",
+       "      <td>161.179993</td>\n",
+       "      <td>161.339996</td>\n",
+       "      <td>159.648727</td>\n",
+       "      <td>20725900</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>2020-01-13</td>\n",
+       "      <td>161.759995</td>\n",
+       "      <td>163.309998</td>\n",
+       "      <td>161.259995</td>\n",
+       "      <td>163.279999</td>\n",
+       "      <td>161.568405</td>\n",
+       "      <td>21626500</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2020-01-14</td>\n",
+       "      <td>163.389999</td>\n",
+       "      <td>163.600006</td>\n",
+       "      <td>161.720001</td>\n",
+       "      <td>162.130005</td>\n",
+       "      <td>160.430450</td>\n",
+       "      <td>23477400</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>2020-01-15</td>\n",
+       "      <td>162.619995</td>\n",
+       "      <td>163.940002</td>\n",
+       "      <td>162.570007</td>\n",
+       "      <td>163.179993</td>\n",
+       "      <td>161.469452</td>\n",
+       "      <td>21417900</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>2020-01-16</td>\n",
+       "      <td>164.350006</td>\n",
+       "      <td>166.240005</td>\n",
+       "      <td>164.029999</td>\n",
+       "      <td>166.169998</td>\n",
+       "      <td>164.428116</td>\n",
+       "      <td>23865400</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>\n",
+       "      <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-734e9f8d-3765-402c-8232-764491ef4679')\"\n",
+       "              title=\"Convert this dataframe to an interactive table.\"\n",
+       "              style=\"display:none;\">\n",
+       "        \n",
+       "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\"viewBox=\"0 0 24 24\"\n",
+       "       width=\"24px\">\n",
+       "    <path d=\"M0 0h24v24H0V0z\" fill=\"none\"/>\n",
+       "    <path d=\"M18.56 5.44l.94 2.06.94-2.06 2.06-.94-2.06-.94-.94-2.06-.94 2.06-2.06.94zm-11 1L8.5 8.5l.94-2.06 2.06-.94-2.06-.94L8.5 2.5l-.94 2.06-2.06.94zm10 10l.94 2.06.94-2.06 2.06-.94-2.06-.94-.94-2.06-.94 2.06-2.06.94z\"/><path d=\"M17.41 7.96l-1.37-1.37c-.4-.4-.92-.59-1.43-.59-.52 0-1.04.2-1.43.59L10.3 9.45l-7.72 7.72c-.78.78-.78 2.05 0 2.83L4 21.41c.39.39.9.59 1.41.59.51 0 1.02-.2 1.41-.59l7.78-7.78 2.81-2.81c.8-.78.8-2.07 0-2.86zM5.41 20L4 18.59l7.72-7.72 1.47 1.35L5.41 20z\"/>\n",
+       "  </svg>\n",
+       "      </button>\n",
+       "      \n",
+       "  <style>\n",
+       "    .colab-df-container {\n",
+       "      display:flex;\n",
+       "      flex-wrap:wrap;\n",
+       "      gap: 12px;\n",
+       "    }\n",
+       "\n",
+       "    .colab-df-convert {\n",
+       "      background-color: #E8F0FE;\n",
+       "      border: none;\n",
+       "      border-radius: 50%;\n",
+       "      cursor: pointer;\n",
+       "      display: none;\n",
+       "      fill: #1967D2;\n",
+       "      height: 32px;\n",
+       "      padding: 0 0 0 0;\n",
+       "      width: 32px;\n",
+       "    }\n",
+       "\n",
+       "    .colab-df-convert:hover {\n",
+       "      background-color: #E2EBFA;\n",
+       "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+       "      fill: #174EA6;\n",
+       "    }\n",
+       "\n",
+       "    [theme=dark] .colab-df-convert {\n",
+       "      background-color: #3B4455;\n",
+       "      fill: #D2E3FC;\n",
+       "    }\n",
+       "\n",
+       "    [theme=dark] .colab-df-convert:hover {\n",
+       "      background-color: #434B5C;\n",
+       "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+       "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+       "      fill: #FFFFFF;\n",
+       "    }\n",
+       "  </style>\n",
+       "\n",
+       "      <script>\n",
+       "        const buttonEl =\n",
+       "          document.querySelector('#df-734e9f8d-3765-402c-8232-764491ef4679 button.colab-df-convert');\n",
+       "        buttonEl.style.display =\n",
+       "          google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+       "\n",
+       "        async function convertToInteractive(key) {\n",
+       "          const element = document.querySelector('#df-734e9f8d-3765-402c-8232-764491ef4679');\n",
+       "          const dataTable =\n",
+       "            await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+       "                                                     [key], {});\n",
+       "          if (!dataTable) return;\n",
+       "\n",
+       "          const docLinkHtml = 'Like what you see? Visit the ' +\n",
+       "            '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+       "            + ' to learn more about interactive tables.';\n",
+       "          element.innerHTML = '';\n",
+       "          dataTable['output_type'] = 'display_data';\n",
+       "          await google.colab.output.renderOutput(dataTable, element);\n",
+       "          const docLink = document.createElement('div');\n",
+       "          docLink.innerHTML = docLinkHtml;\n",
+       "          element.appendChild(docLink);\n",
+       "        }\n",
+       "      </script>\n",
+       "    </div>\n",
+       "  </div>\n",
+       "  "
+      ],
+      "text/plain": [
+       "         Date        Open        High         Low       Close   Adj Close  \\\n",
+       "0  2020-01-10  162.820007  163.220001  161.179993  161.339996  159.648727   \n",
+       "1  2020-01-13  161.759995  163.309998  161.259995  163.279999  161.568405   \n",
+       "2  2020-01-14  163.389999  163.600006  161.720001  162.130005  160.430450   \n",
+       "3  2020-01-15  162.619995  163.940002  162.570007  163.179993  161.469452   \n",
+       "4  2020-01-16  164.350006  166.240005  164.029999  166.169998  164.428116   \n",
+       "\n",
+       "     Volume  \n",
+       "0  20725900  \n",
+       "1  21626500  \n",
+       "2  23477400  \n",
+       "3  21417900  \n",
+       "4  23865400  "
+      ]
+     },
+     "execution_count": 2,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "ms = pd.read_csv('MSFT.csv')\n",
+    "ms.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "HRjNC29NTlFV",
+    "outputId": "61f2d841-aee2-492a-dcdf-084cc6bd12c2"
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(252, 7)"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# checking the shape of the data\n",
+    "ms.shape"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "XzX4wK42TlFW"
+   },
+   "source": [
+    "* There are 252 rows and 7 columns."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "8f6nBzAPTlFX",
+    "outputId": "deeec7b2-fa56-4020-a91d-39a9c04e0f9c"
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 252 entries, 0 to 251\n",
+      "Data columns (total 7 columns):\n",
+      " #   Column     Non-Null Count  Dtype  \n",
+      "---  ------     --------------  -----  \n",
+      " 0   Date       252 non-null    object \n",
+      " 1   Open       252 non-null    float64\n",
+      " 2   High       252 non-null    float64\n",
+      " 3   Low        252 non-null    float64\n",
+      " 4   Close      252 non-null    float64\n",
+      " 5   Adj Close  252 non-null    float64\n",
+      " 6   Volume     252 non-null    int64  \n",
+      "dtypes: float64(5), int64(1), object(1)\n",
+      "memory usage: 13.9+ KB\n"
+     ]
+    }
+   ],
+   "source": [
+    "# inspecting the dataset\n",
+    "ms.info()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "qk3Sd4miTlFX"
+   },
+   "source": [
+    "* There are 6 numeric features about the stock price, and one categorical feature 'Date'."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "7rq4JPXdTlFY",
+    "outputId": "14db10ff-ba7e-467c-e898-1de52d4c605b"
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Date         0\n",
+       "Open         0\n",
+       "High         0\n",
+       "Low          0\n",
+       "Close        0\n",
+       "Adj Close    0\n",
+       "Volume       0\n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# checking for missing values\n",
+    "ms.isnull().sum()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "4HUVIvyWTlFY"
+   },
+   "source": [
+    "* There are no missing values in the data."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "YMBPTY9yvKpL"
+   },
+   "source": [
+    "## Log Daily Return\n",
+    "\n",
+    "\n",
+    "Log returns are defined as the calculation of return on investment using logarithm. It  gives a much clearer picture about the overall returns than the arithmetic formula that we use for returns in everyday life.\n",
+    "\n",
+    "**Consider an example to understand this**\n",
+    "\n",
+    "The closing price of for three days are:\n",
+    "\n",
+    "Day 1: Rs 100\n",
+    "\n",
+    "Day 2: Rs 150\n",
+    "\n",
+    "Day 3: Rs 75\n",
+    "\n",
+    "Calculation of returns using arithmetic return calculation:\n",
+    "\n",
+    "Return= (Final Value - Initial value)/Initial Value\n",
+    "\n",
+    "Return on Day 2: (150-100)/100 =0.50 that is 50%\n",
+    "\n",
+    "Return on Day 3: (75-150)/150= -0.50 that is -50%\n",
+    "\n",
+    "Overall return: (75-100)/100= -0.25 that is -25%\n",
+    "\n",
+    "Here it shows that there was a gain of 50% on day 2 and a loss of 50% on day 3. It looks like there is neither loss, nor gain at this point. But actually there is a loss of 25% on Day 3 compared to Day 1. Arithmetic returns fails here.\n",
+    "\n",
+    "Let us calculate the returns using Log Returns Formula\n",
+    "\n",
+    "Log Return= ln(Final Value) – ln(Initial value)\n",
+    "\n",
+    "Return on Day 2: ln(150)- ln(100) = 5.01 – 4.60 = 0.41\n",
+    "\n",
+    "Return on Day 3: ln(75)- ln(150) = 4.32- 5.01 = -0.69\n",
+    "\n",
+    "Overall return: ln(75)- ln(100) = 4.32- 4.60 = -0.28\n",
+    "\n",
+    "In term of log returns the return for day 2 is 0.41 and for Day 3 is -0.69. So it is clearly visible that the loss on Day 3 is more than the gain on Day 2.The overall return is -0.28 on Day 3 ,which is the same however we calculate - either by adding the daily returns or by using the formula (ln75- ln100).\n",
+    "\n",
+    "This is not true in case of arithmetic returns where we get “0” by adding daily returns when actually return is -25% in the above example. A log daily return gives a clearer picture of returns of an investment."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {
+    "id": "ZGQ2T0cRvL22"
+   },
+   "outputs": [],
+   "source": [
+    "# let's calculate log daily return for Microsoft data\n",
+    "ms['LogReturn'] = np.log(ms['Close'])-np.log(ms['Close']).shift(1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "1jhpvYidvOux",
+    "outputId": "2ca3a548-07cb-44f9-dd42-0bec60ad1f3b"
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0           NaN\n",
+       "1      0.011953\n",
+       "2     -0.007068\n",
+       "3      0.006455\n",
+       "4      0.018158\n",
+       "         ...   \n",
+       "247   -0.021495\n",
+       "248    0.000964\n",
+       "249   -0.026271\n",
+       "250    0.028060\n",
+       "251    0.006074\n",
+       "Name: LogReturn, Length: 252, dtype: float64"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "ms['LogReturn']"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "eLLivqwrvUru"
+   },
+   "source": [
+    "## Mean and Standard Deviation of LogReturn "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {
+    "id": "Fd3fcJ2tvVHf"
+   },
+   "outputs": [],
+   "source": [
+    "#mean\n",
+    "mu = ms['LogReturn'].mean()\n",
+    "#standard deviation\n",
+    "sigma = ms['LogReturn'].std(ddof=1)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "JvFccvmivaqD"
+   },
+   "source": [
+    "## Plotting the Distribution \n",
+    "\n",
+    "It  will help us analyse the shape of data distribution and PDF of normal distribution using the calculated statistics ( mu and sigma ) from data."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/",
+     "height": 279
+    },
+    "id": "imDlwanmvX8T",
+    "outputId": "eadea095-e1e4-4b1d-91d2-2a3249d7c468"
+   },
+   "outputs": [
+    {
+     "data": {
+      "image/png": "iVBORw0KGgoAAAANSUhEUgAAAX4AAAEGCAYAAABiq/5QAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAADh0RVh0U29mdHdhcmUAbWF0cGxvdGxpYiB2ZXJzaW9uMy4yLjIsIGh0dHA6Ly9tYXRwbG90bGliLm9yZy+WH4yJAAAgAElEQVR4nO3dd3xUZfb48c+Zkt4rJUBoimBBCCDYWFTE3hFdFSvq4qqrPxfE3UVd3a8FV113116wV6yr0lRQRCX0Jj30NFp6mZnn98cdMKQHMiWZ83695pWZW8/NTE7uPPe55xFjDEoppUKHLdABKKWU8i9N/EopFWI08SulVIjRxK+UUiFGE79SSoUYR6ADaI6UlBSTmZkZ6DCUUqpNWbhwYaExJrX29DaR+DMzM8nOzg50GEop1aaIyOb6pvusqUdEIkTkFxFZKiIrReQB7/TuIvKziKwXkfdEJMxXMSillKrLl238lcAIY8xxQH9glIicADwKPGmM6QXsAW7wYQxKKaVq8VniN5YS70un92GAEcCH3ulTgQt9FYNSSqm6fNqrR0TsIrIEyAdmAhuAvcYYl3eRbUDnBtYdJyLZIpJdUFDgyzCVUiqk+DTxG2Pcxpj+QAYwGOjTgnVfMMZkGWOyUlPrXJRWSil1iPzSj98Ysxf4FhgKJIjI/t5EGcB2f8SglFLK4stePakikuB9HgmcAazG+gdwqXexscCnvopBKaVUXb7sx98RmCoidqx/MO8bY74QkVXAuyLyELAYeNmHMSillKrFZ4nfGLMMOL6e6Rux2vuVUkoFQJu4c1epUHHayFHk5Rc2OD89LYXZM772Y0SqPdLEr1QQycsv5IbH325w/sv3XOnHaFR7pdU5lVIqxGjiV0qpEKOJXymlQowmfqWUCjGa+JVSKsRo4ldKqRCjiV8ppUKMJn6llAoxmviVUirEaOJXSqkQo4lfKaVCjCZ+pZQKMZr4lVIqxGjiV0qpEKOJXymlQowmfqWUCjGa+JVSKsRo4ldKqRCjiV8ppUKMJn6llAoxmviVUirEaOJXSqkQo4lfKaVCjCZ+pZQKMZr4lVIqxPgs8YtIFxH5VkRWichKEbnDO/1+EdkuIku8j7N9FYNSSqm6HD7ctgu42xizSERigYUiMtM770ljzBQf7lsppVQDfJb4jTE7gZ3e58Uishro7Kv9KaWUah6/tPGLSCZwPPCzd9JtIrJMRF4RkcQG1hknItkikl1QUOCPMJVSKiT4PPGLSAzwEXCnMaYIeBboCfTH+kbwRH3rGWNeMMZkGWOyUlNTfR2mUkqFDJ8mfhFxYiX9t4wx0wCMMXnGGLcxxgO8CAz2ZQxKKaUO5stePQK8DKw2xvyzxvSONRa7CFjhqxiUUkrV5ctePScCVwPLRWSJd9ok4AoR6Q8YIAe42YcxKKWUqsWXvXp+AKSeWV/6ap9KKaWapnfuKqVUiNHEr5RSIUYTv1JKhRhN/EopFWI08SulVIjRxK+UUiFGE79SSoUYTfxKKRViNPErpVSI0cSvlFIhRhO/UkqFGE38SikVYjTxK6VUiNHEr5RSIUYTv1JKhRhN/EopFWI08SulVIjRxK+UUiFGE79SSoUYTfxKKRViNPErpVSI0cSvlFIhRhO/UkqFGE38SikVYjTxK6VUiNHEr5RSIcZniV9EuojItyKySkRWisgd3ulJIjJTRNZ5fyb6KgallFJ1+fKM3wXcbYzpC5wAjBeRvsBEYLYxpjcw2/taKaWUn/gs8RtjdhpjFnmfFwOrgc7ABcBU72JTgQt9FYNSSqm6/NLGLyKZwPHAz0C6MWand1YukN7AOuNEJFtEsgsKCvwRplJKhQSfJ34RiQE+Au40xhTVnGeMMYCpbz1jzAvGmCxjTFZqaqqvw1RKqZDh08QvIk6spP+WMWaad3KeiHT0zu8I5PsyBqWUUgfzZa8eAV4GVhtj/llj1mfAWO/zscCnvopBKaVUXQ4fbvtE4GpguYgs8U6bBDwCvC8iNwCbgdE+jEEppVQtPkv8xpgfAGlg9mm+2q9SbUlppYu3ft7MrtIq+nSIxYjeU6l8z5dn/EqpRizI2c0tbyxkV2kVYXYbVW4P9oFXUVHtJsJpD3R4qh3T0wulAmBDQQk3Ts0mLtLJtD8MY/XfR/HYpcfiTurGp0t24DH1dnZTqlVo4lfKzypdbm6amo3TLky9bjADuiZitwmjs7oQvvwTcosqWLJlb6DDVO2YJn6l/Oyl7zexsbCUJ0b3p2ty1EHzHDuX0yMlmh837mJfeXWAIlTtnbbxK+VHp55zCZuPugr7rg2MHz25zvwtW7Yw5sg0Xvsxh4Wb9zCiT1oAolTtnSZ+pfxoR1w/bM4wrr7oLOKvPL/O/EmXDiUmwsFRHWNZtbOIE3okERWmf6aqdWlTj1J+sru0iuqM4+nTIY74SGejyw7omojbY1i6dZ+folOhRBO/Un7y+vwcsIcxoGtCk8smRofRIyWa5dv34fFoDx/VujTxK+UHlS43r8/fjD1/Dckx4c1ap2+nOMqr3WzZXebj6FSo0cSvlB/MWpXP7tIqnFt+bvY6mcnRRDhsrM4tanphpVpAE79SfvDugi10io/AXrix2evYbULv9Fg2FpRS5fL4MDoVapqV+EVkmoicI6KFRJRqqa27y/hhfSGXZXVB6h9+okFHdYzF5TFsKCjxUXQqFDU3kf8XuBJYJyKPiMiRPoxJqXZl2qLtAFyWldHidTvERRAdZmdjYWlrh6VCWLMSvzFmljHm98AAIAeYJSI/ish13sFWlFL1MMbw6dLtDM5MIiMxqukVahERuqdGs3lXKS6PNveo1tHsphsRSQauBW4EFgNPY/0jmOmTyJRqB1buKGJjQSnn9+90yNvokRJDtduwbXd5K0amQlmzbgkUkY+BI4E3gPNqDJb+nohk+yo4pdq6z5fuwGETzj664yFvo0tiJE67aHOPajXNvRf8RWPMlzUniEi4MabSGJPlg7iUavOMMXyxbCenHJFKYnTYIW/HYbfRNSmKTYWlLbw0rFT9mtvU81A90+a3ZiBKtTfLtu1j+95yzjnm0M/298tMjqak0oWJTm2FyFSoa/SMX0Q6AJ2BSBE5nt+GUowDWn6lSqkQMmNVLnabcNpRh19hs2uS9efmSul52NtSqqmmnjOxLuhmAP+sMb0Ya+B0pVQDZqzMY0j3JBKiDr2ZZ7+4SCcJUU6KNfGrVtBo4jfGTAWmisglxpiP/BSTUm3exoIS1uWX8PshXVttm92SolhanEmly024Q8fkVYeuqaaeq4wxbwKZInJX7fnGmH/Ws5pSIW/GqjwARvbr0Grb7JocxdJtYWTn7OHEXimttl0Vepq6uBvt/RkDxNbzUErVY/rKXI7pHE+nhMhW22ZGQhR43MzfsKvVtqlCU1NNPc97fz7gn3CUavvyiypYvGUvd59xRKtuN8xhw1a0k5826tm+OjzNLdL2mIjEiYhTRGaLSIGIXOXr4JRqi2aubv1mnv3su3NYum0v5VXuVt+2Ch3N7cc/0hhTBJyLVaunF3CPr4JSqi2bvjKPzOQojkiPafVt2/fkUO02LN6yp9W3rUJHcxP//iahc4APjDFNDgQqIq+ISL6IrKgx7X4R2S4iS7yPsw8hZqWCVnFFNfM3FHJG33REpOkVWsi+Zws2gZ827W71bavQ0dySDV+IyK9AOXCriKQCFU2s8xrwb+D1WtOfNMZMaVGUSgWJ00aOIi+/sMH50UcMobrH2Zx+VLpP9i+uSvp1iufnjXqBVx26ZiV+Y8xEEXkM2GeMcYtIKXBBE+vMFZHMww9RqeCRl1/IDY+/3eD8/7z2LrERDgZ0S/RZDEO6J/H6T5upqHYT4dT+/KrlWjKiVh/gchG5BrgUGHmI+7xNRJZ5m4J899ehlJ8ZY3Cn9uaU3qk47b4brG5Ij2SqXB6WbN3rs32o9q25vXreAKYAJwGDvI9Dqcr5LNAT6A/sBJ5oZJ/jRCRbRLILCgoOYVdK+VdhSRUmIo7hR/q2kNrgzCRE4OeN2s6vDk1z2/izgL7GmMOqCmuMydv/XEReBL5oZNkXgBcAsrKytBqtCnqbdln18k/1ceKPj3JyVIc4ft60C+jt032p9qm530dXAIfdKVlEatanvci7XaXahZzCUmz7tpMWG+HzfQ3pkcSiLXuoculwjKrlmnvGnwKsEpFfgMr9E40x5ze0goi8AwwHUkRkGzAZGC4i/QGDdT/AzYcWtlLBpaLaTe6+ChwF65pc1lleSsKOLTjLS6mMjmNv5264w8JbtL8h3ZN5dV4Oy7btJSsz6VDDViGquYn//pZu2BhzRT2TX27pdpRqCzbvKsMABcvncnT/upe/nB4P5+3ZzYs7tzPkoixsNQZOdzmdbDt2CCvOugxbM1tTh3S3kv3Pm3Zr4lct1tzunHNEpBvQ2xgzS0SiAO1HppRXzq5SIpw2KvM2cMMHPx40r+vCeZz+1F+Jz9vOKpudX8bcTEHPo6iKjiVi3x7S162g9/fTOfehO/jBZmflhtUU9Dyq0f0lRofROy2GBTl6gVe1XHN79dwEfAg8753UGfjEV0Ep1ZZ4jGHzrjK6JUdDjTN2e1UVw//7EJfcez2usHCm/eMlBkbHMf/aO1l/8plsGTCMtb87h+/HTeDV12by5cQpdDQerrjtUga//exB26rPoO5JLNy8B7dH+z6olmnuxd3xwIlAEYAxZh1w+OPJKdUO5BdVUl7tJjP5t9FInWUlXPjXcRz/yRssuuga3vrvx2zOOhkaKONg7HbWjDiPATHxrDtlFCe+9hQjn5iEzVXd4H4HZSZSXOFibV5xqx+Tat+a28ZfaYyp2l97REQcWBdolQp5m3aVImCd8QPhRXu5+L4bSVu3iq/veZTVZ1zY7G3tERtfTZzCnozuDH3jGSL37uLzyf/G46w7fGNWN6ttf0HObo7qGNcqx6JCQ3PP+OeIyCSsQdfPAD4APvddWEq1HTmFpXSIjyDSaSfcGC6YfCspG3/l88nPtCjpHyDCT1ffxqzbH6DHL3MY+cQk8NTttpmRGEmHuAgW5GilTtUyzU38E4ECYDlWF8wvgb/4Kiil2orSShf5xZVkJkeDx8PL5aV0XrmI6X9+jI1DTzusbS8/dww/XHcXR33zOae8+Fid+SLCoO5JLNi0m8O8t1KFmOb26vGIyCfAJ8YYrZ+glNfm3WUAZKZEMfSNZzjBVcWccRNYe2rrVBxfMGYc0bsLGPjRq+T36ltn/qDMRD5fuoPte8vJSIyqZwtK1dXoGb9Y7heRQmANsMY7+tbf/BOeUsEtp7CU6DA7A9cuZMjbz/KGM4xFl1zXejsQYc4tE9l2dBanP/U3elaUHzS7Zju/Us3VVFPPn7B68wwyxiQZY5KAIcCJIvInn0enVBDzeAybd5fR31HOWY/ew+6uPbkzIrrBnjuHytgdfHnfk1RFRfNkzkYoKzsw78gOscSGO7SdX7VIU4n/auAKY8ym/ROMMRuBq4BrfBmYUsFu574Kqqrd3DttCmHlpfzvvqco88GoWwClyWl8NXEKPSorYNKkA9PtNmFgZiLZesavWqCpxO80xtQZbsjbzu/0TUhKtQ05u0q5dOU3HL30R+Zdfxe7Mn1bKXPr8UN5KzkVnn4a5sw5MH1QZhJr80rYU1rl0/2r9qOpxN/YJ0k/ZSqklWzawuTZL7K93wAWX3C1X/b5VMfO0KMHXHcdlFploLO8o30t3KzNPap5mkr8x4lIUT2PYuAYfwSoVDAqrqjmj5/9m3B3NTPu/gfYfDfiVk3ldju88gps2gQPPwzAcV0SCLPbWLBZm3tU8zT6aTXG2I0xcfU8Yo0x2tSjQlbU3G85Z8085l56E3szuvt356eeCtdcA1OmwK+/EuG0c0xGPAs2aeJXzeOf0xSl2hFbdRWjpz7GlsSOrLzypsAE8dhjEB0N48eDMWRlJrJ8+z4qqt2BiUe1KZr4lWqh46ZNpWvBVl65/C484b4fbate6enwj3/AN9/Axx8zqFsS1W7DUh2AXTWDJn6lWiDB5WLI288xq+cgdp08IrDB3HQT9O0LEyeS1TkGgGy9wKuaQRO/Ui1wc95OwirKeGzE9XRJCnCJBIfDavJZt46EN17liPQYftF2ftUMzS3LrJTauJExuwr4ZMAoKnodidMeBOdNZ58NI0bAAw9QMmo8c9KOoV//8Ug9VdPT01KYPePrAASpgo0mfqWa6777cInw6JAx9E2JDnQ0FhF4/HEYOJBrfvyYRy4bxAV/e4XU2LqDt798z5UBCFAFoyA4ZVGqDViwAN59l1d6DSA/NpnMYEn8AAMGwFVXce2mFXQsKmDH3vKm11EhTRO/Us1x772QksILJ1xGcnQY8ZFBdhvLQw9hw/CnXz7QxK+apIlfqab8+CPMnk3F3fewL71PcJ3t79etGx8mpXDx4umYzTk6MItqlCZ+pZry8MOQnMx3wy8Bm53uwZj4gZfSO2Bsdm747m2KK1yBDkcFMU38SjVm0SL48ku46y5mbCmGqjI6xgfopq0m5DvD+OXMy7h0+Syq1qwLdDgqiGniV6oxDz8M8fG4b/0D360pwFGwDpuPau63hmVX3UK13cmID54LdCgqiGniV6ohK1fCtGlw++0sKfKwu7QKe8GaQEfVqIrkND4ddj7Ds2eSuHVjoMNRQcpniV9EXhGRfBFZUWNakojMFJF13p+Jvtq/Uoft//7PKoR2xx3MXp2P3SY4CjcEOqomfXf+tVQ6nAx4W8/6Vf18ecb/GjCq1rSJwGxjTG9gtve1UsFn/Xp45x249VZITuabX/MZlJmIuCoCHVmTYrp05p3jRtHv2y+I27k10OGoIOSzxG+MmQvULhxyATDV+3wqcKGv9q/UYXnkEXA64e672banjF9zizmtT3qgo2qW9LhwXh5yMR6bjawPXgp0OCoI+buNP90Ys9P7PBdo8C9JRMaJSLaIZBcUFPgnOqUAtmyBqVOt6pcdOvDtr/kAjDgqLcCBNY/DbsN07sz/jh9Jv+kfEb0rL9AhqSATsIu7xrrDpMG7TIwxLxhjsowxWampqX6MTIW8xx6zauDccw8As3/NJzM5ih5B2n+/Pp0SInly4EXY3B4GfPRaoMNRQcbfiT9PRDoCeH/m+3n/SjVu50546SUYOxa6dqWsysWPG3Yxok86EsTdOGvrnBDJ5vgOLBo2imO/eJeIIq3Tr37j78T/GTDW+3ws8Kmf969U4554AqqrYaLV7+D7dYVUuTyc1kaaefbrlBCBCLw14grCKso4/uPXAx2SCiK+7M75DjAfOFJEtonIDcAjwBkisg443ftaqeBQWAjPPQdXXAE9ewIwfWUu8ZFOBndPCnBwLRPusJMWG85PER1Yd9JI+n/6JtFuHY9XWXxWj98Yc0UDs07z1T6VOixPPw2lpTBpEgDVbg+zV+dzWp+04Bh0pYUyEqNYvGUP8y4bx7U/zGBMoXaSUJa292lWyhf27oV//QsuucQaxxb4eeNu9pVXc+bRHQIc3KHpkhiJx8CStB7kZJ3ENYV5UFYW6LBUENARuJQC+M9/oKgI7rvvwKTpK3OJcNo4pXfw9CrL2ZzD0f2z6p23ecuWg153jI/EJrB1Tzm/XHEro7N/sC5c3367P0JVQUwTv1IlJfDkk3DOOXD88QB4PIYZq3IZfkQakWH2AAf4G7fHcMPjb9c7b9KlQw96HeawkR4XwbY9ZWwflEV2dAxZjz8Ot9wCYWH+CFcFKW3qUer552HXroPO9pds20teUSVnHt027tZtSEZiJPnFlVS63LyQ1gG2bYPXtYdPqNPEr0JbRQVMmQIjRsDQ386Yp6/MxWETRrSRMg0NyUiMwhjYsbeCH2PjYOBAqxyFSwdqCWWa+FVoe+UVyM2Fv/zlwCRjDNNX5DK0Z3Lwja3bQp3iI7CLsG1PmXU38n33wYYN8MEHgQ5NBZAmfhW6qqrg0Udh2DAYPvzA5LV5JeTsKuPMfm2zN09NDruNDvERbNvjHYD9ggugXz/4xz/A4wlscCpgNPGr0PXmm1ZBtr/8xTob9vrfsh3YBEb2a9vNPPvtb+c3jgiw2eDee2HFCvj880CHpgJEE78KTS6XNdDKgAEw6rdhI4wxfLZ0Byf0SCYtNjjH1m2pLolRALiTu1sTLr8cevSwhpU0DdZJVO2YJn4Vmt5/3xpspdbZ/vLt+8jZVcb5x3UKYHCtq0N8BGF2G66UXtYEhwMmTIAFC2DWrMAGpwJCE78KPR6P1cbdr5/V5l3DZ0t24LQLZx3dMUDBtT67TeiSFIk7pRdm/xn+2LHQubN11q9CjiZ+FXo++cQaSH3SJKvN28vjMXyxbCenHpFKfFTb7s1TW7ekaExkAhsKSqwJ4eHw//4fzJkD8+YFNjjld3rnrgotxsCDD0Lv3jB69EGzfsnZTW5RBZ6ln3D0k7fWu3rtsghtRbdkq51/ztpCeqXFWhNvusk643/4YfjyywBGp/xNE78KLZ9/DkuXWkMrOg7++H+2dAeRTjul67O5sZllEdqKuEgnUlrI3LUF3HCS9yJvdDT86U9W3/5Fi6wL3SokaFOPCh37z/Z79IArrzxoVrXbw1fLd3J633TEXR2gAH3LUbCenzftoqK6Rl3+8eMhPt665qFChiZ+FTq+/BIWLrTOcGud7f+wrpA9ZdXtqjdPbfbC9VRUe1iQs/u3ifHxcNttMG0arF4duOCUX2niV6Fh/9l+t25w9dV1Zr+fvZXEKCenHJESgOD8w74nhzC7jblraw3IcuedEBlp3degQoImfhUaZsyAX36xevI4D+6xU1hSycxVeVwyIINwR/CUYG5t4q5mUPdE5q4tPHhGSgrcfDO8/TasXRuY4JRfaeJX7Z8x8MAD0KULXHttndnTFm3D5TFcPqiL/2Pzs1N6p7Imr5id+8oPnjFhgtXF84EHAhOY8itN/Kr9mz0b5s+3atTUGoDEGMO7C7YysFsivdNjAxSg/4zokwbArNX5B89IT4c//hHeeceq46PaNU38qn0zxirL0LkzXHddndkLcvawsaCUMSFwtg/QKy2G7inRzFiZW3fmPfdATAzcf7/f41L+pYlftW9ffAE//wyTJ0NE3aJr7y7YQmy4g3OObT8lGhojIozsl878DbvYV1ar22pyMtx1F3z0kdWvX7VbmvhV++XxWF03e/Wqt21/X3k1Xy7fyfn9OxEVFjr3Mo7q1wGXx/DNmry6M//0J0hMhL/9zf+BKb/RxK/ar/feg+XLrW6czrq1dz5ZvJ2Kag9jBnUNQHCBc1xGAulx4UxfUU/ij4+3mnz+9z/46Sf/B6f8QhO/ap+qq62z1mOOserP1+LxGF77MYfjMuI5unNcAAIMHJtNGNm3A3PWFlBe5a67wB//CKmpBw1HqdoXTfyqfXr1Vave/sMPH1SBc79v1+SzqbCU60/qjtSoxx8qzuzXgfJqN3PXFdSdGRMDEydavaFmzvR/cMrnApL4RSRHRJaLyBIRyQ5EDKodKy62LuYOHQrnnlvvIq/M20TH+AjOPiY0LurWNqRHEvGRTqbX17sH4A9/gMxMq3Szu55vBapNC+QVrd8ZYwqbXkypFnrsMcjNhY8/Pmh0rf1OvPAatve5nLA1Mzl+4IQ689tq6eWWcNptnNYnjdmr86l2e3Daa50DRkTAI4/AmDHw+uv1doVVbVfodGVQoWHrVnjiCbjiCjjhhHoXyU04hnCHjevG3Uy44w915rfV0sstNbJfB6Yt3s5PG3dxcu/UuguMHg1PPmn1jBo92irjrNqFQLXxG2CGiCwUkXH1LSAi40QkW0SyCwrqaYdUqj733Wd142yg4Ni6vGLcHfpyXEZCu67L0xzDj0wlNtzBJ4t31L+AiPVPdOdO66dqNwKV+E8yxgwAzgLGi8gptRcwxrxgjMkyxmSlptZzNqJUbdnZ8MYbVl/0bt3qXeTp2evAVUn/Lgl+Di74RDjtnH1MR75esbP+3j0AJ54Il1xiNZ/taOAfhGpzApL4jTHbvT/zgY+BwYGIQ7UjHg/ccYfVDfHee+tdZMX2fXyxbCfOnJ+IDAvts/39Ljy+M6VVbmasauAiL8Cjj4LLBXff7b/AlE/5PfGLSLSIxO5/DowEtCqUOjyvvgo//midmcbV3y//selrSIhyEpajg4vvN6R7Ep3iI5i2aHvDC/XsaXXvfPddq4unavMCccafDvwgIkuBX4D/GWO+DkAcqr0oLIQ//xlOPhnGjq13kW/X5DN3bQHjh/dCXJV+DjB42WzCJQMz+H5dAdv3lje84IQJ1j+A8eOhqsp/ASqf8HviN8ZsNMYc5330M8Y87O8YVDszYQIUFcGzz9bbfbPS5ebBz1fRIyWascMy/R9fkLt8UBcM8N4vjXRjjYyEZ56BNWv0Qm87oHfuqrZt3jx45RWrqmS/fvUu8tL3m9hUWMrfzutLmEM/8rVlJEZx6hGpvJe9FZfb0/CCZ50FF18Mf/875OT4LT7V+vSvQLVdFRXWkIFduzZYTXJ9fjFPz1rHqH4dGH5kmp8DbDuuHNyVvKJKZq2up3BbTU89BXY73HijNdaBapM08au2a/JkWLkSnn++3puLXG4P93y4jKhwO3+/8OgABNh2jOiTRkZiJC99v6nxBbt0sZp6Zs+2fu+qTdLEr9qmefPg8cdh3DgYNareRZ6evY7FW/bywPn9SI0N93OAbYvDbuOGk7qTvXkPi7bsaXzhm26CkSOtOj4bN/onQNWqNPGrtqekxOq9k5kJU6bUu8j36wr497fruWxgBhf07+zf+Nqo0VldiItw8OLcJpK5CLz0ktXkc/311j0Uqk3RxK/anj//2TrTfPVViK07QPrGghJue3sxvdNieOCC+i/4qrqiwx1cPbQbX6/M5dfcosYX7tLFau+fM8eq56PaFE38qm358EOr2+add8Kpp9aZvaukkhumZmO3CS9dMyikhlRsDTed3IOYMAdPzlzb9MLXXgsXXWTd3DV/vs9jU61H/ypU27F2LVx/Pavi47ly1ne4+mcdNNs4wikfdC0mNo0P/nAyXZOjAhRocMrZnMPRtX5nNaWnpTB7xtfceHIPnpy1lqVb93JcYzWNRKyutAMGWDPYLvcAABJQSURBVNU7Fy+GlBQfRK5amyZ+1TaUllrFwsLCuD2tE2OfePeg2RXVbj5dsoPy4grCF7xBVuYFAQo0eLk9hhsef7vB+S/fcyUA15+UyRs/5fDA5yv58JZh2GyNjFCWkAAffADDhsE118AXX9Q74pkKLvoOqeBnDNx6q9V18+23yQ0LO2h2SaWLjxZto6C4krOP6YijcH2AAm0fYiOcTBjVh0Vb9vLRom1NrzBwoNXe/9VX1s1dKuhp4lfBb8oUq9zy5MlWN8IacosqeHfBFvaVV3PecR3pmRoToCDbl0sGZDCgawL/99WvFBQ3o7bRLbdYZ/z33w9vveXz+NTh0aYeFdw+/NDqxTN6NPz1rwfNWpNbzMzVeUSF2blsYJcDffWbassOhaEVD5fNJjxyybGc+8wPTPxoGS+NzWp8UHoRePFF2LLF6uLZpQucUmeYDRUkNPGr4PX993D11dag6a+9dqDt2NgczFlTwJJte+kUH8E5x3Y8qPdOU23ZoTK04uE6Ij2WCaP68PcvVvH6/M1NF7gLC4Np06z2/gsvtHr6HHmkX2JVLaNNPSo4LVgA55xj3aT16adWdUhgbV4x5UNvYsm2vfTPSOCiAZ21y6YPXTcsk9P6pPHgF6v4cX1h0yskJsKXX4LTCWecAZuaKAGhAkITvwo+ixdbZRiSk2HmTEhNxRjDG/NzOO+ZHzBhMZx/XCdOPTIVh/Yg8SmbTXhqTH96pERz61uLWLWjiRu7ALp3h+nTrTusR4ywmn9UUNFTJRVc5s+3yv/GxVmFwDIy2LmvnL98vILZv+Zz6hGpLHjuUbqf/UKgI213Grs24olMoHLojfz+pZ9468YT6Nup/lHODujf3/qnfdppVlv/zJnQu7cPolaHQhO/Ch7Tp1t99Tt2hFmz8HTpylvzc3j06zW4PB7+em5frhuWybH/Kgl0pO1SU9dGXpx8G+HnTmD08/N55srj+V1TZa4HDoRZs6x/5CeeCF9/bd3spQJOvyer4PDf/8LZZ0OvXjB3Lusjkxj9/Hz++ulK+ndJYMadp3LDSd0bv5lI+ZStbDcfjx9G16Qorn9tAY9+/StVriYKtGVlwQ8/WNdoTjkFPvnEP8GqRmniV4G1fzCV8ePhnHMonvUtjy3dx9lP/8D6ghKmXHYcb9wwWMsvBImO8ZF8cMtQRg/swrPfbeCcf33P3LUFmMYGZTnySKsJr18/q7bPgw+C2+2/oFUd2tSjAmfNGhgzBpYswfPnCbx3wc088Vw2hSVVXHx8ZyadcxQpMVpHP1jUvgYQkXoE6/uM4ppXSrDt3UrKnpXMffMpIpz2uit36gTffWeNnzB5snX95o03rNHTgNNGjiIvv+FeQ/vrCKnWoYlf+V91tTWK0/33Y6KjmfPPV5ns6sbmz1YxODOJV649imMzGikOpgKivmsALo+HVTuKWLTFSX5CFwY9NIshPZIY2jOFId2T6JkaQ2SY9x9BZCS8/jqcfjrcdhsce6zVxHfFFeTlFzarjpBqHZr4lX8tWGA17SxezPpTRvHHYdexOi+aYzOcvHD1QM7om974HaIqqDhsNo7NSOCYzvG88MhfOPe2vzJ/wy5mrc4/sExqbDhdEiNJiAojNsJBbPwAujz9ERf8cyIdfv97Cp9+lu5hiewqqSQ2wkmYQ1ugfU0TvzokLf5qvmYNVfdOIuzjaeyLS+LPF05k+pEnYS/cSMTG79nw9UbuesladMeO7XTq1PCoWVpyIfiICI7dm/i/i48FYMfechZu3sPmXaVs3lXG59/Np8pjxzgjMI5wcETw2Nn3c2Wnr7j7+zf5uLKMNx+axH+GjqY0KZWESCcpMeGkx0WQHheOQU8GWpMmfnVImvPVvMrlYf30udie+Re9Z35GlSOM/554BZ+fNoYtK39g7NBuJET1Bs48aN1Jlw7VkgttXKeESDolRB54/dXDN3BzjffUGIPLY6g6pRf/vupKOtwxmusXf8mVy2Ywc/BZvDLsUpaXJLNs+z5rhdPv5fLn5zMoM4mszEQGdEskLsLp78NqNzTxq1ZT5fKQW1RBYe5uTks6hmU9jiVr60pKnRF8etLF5P7hToYP68vtneM5dsCDJETdGOiQVYCICE674LTboGM6f/RUYXt1Olnvv8SZM6dx1k9fsGnQyfw8/EK+P2Iws2Z+RXlmGs/O2YD7W4MI9OkQx6DMRLIykxiUmUjH+Mimd6wATfzqMJRWusgtqmDH3nL25hZyxIpfOPvXHzh9/c9EVVeyJz2D1ffcT/rtt3BxRnqgw1VBbl+nrsy+80F+uno8/T99i74zP+bKn7/jwvgk/me3cdnvB1N61aksLazkl5zdZOfs4cOF23h9/mYAOidEMigzkUHdkxiUmUSv1Bi976MB7T7xt+duYv48tiqXh9U7i1i0ZQ+Lt+wlcuC1bJj6Pv13rOW6zUs4bucaHB4PJTEJrDn9AibN/Zrt6Wl4ZnwOMz6vsz1tp29/Giv50JL3uzQ5nXnX38WPY2+n28J59J35CWfO+QrOOw+bCETHYI+JxRkdQ3RUDCahE3ts8eRmHsuneV35ZEmstaGqMuxFO7EV7SRJSnj3P4/QLSkq6P4ZBCJHBSTxi8go4GnADrxkjHnEF/vJ3VfBzlJh9INTsYtgtwt271fM/T1H2nI3sZrt7B5jqHJ5qHR5DtxN+fE/J/BrbhGCYLeB3WbDYRPsNsFhFxw2G3bv64pqN2WVbkoqXeQXV5BXVMHOXSUUrt1E5a/rCMvZSJdd2+m5ezvn5G8grcj6oHpEyOt9NAsvH8eWAcPY0W8AHoeT7+bN4h9T3mkwdm2nb38aK/lwKO+3sTvIGXwqOYNPZfKi+bw66Ql6/PQtvZf/wtBNaxHvTWP7OuQztzCPtE6x7A4TdsSnsyY8idW2VPJKEyks6Umegd9N+Y6YcAd9O8ZxRIcYeqXG0DMthl5pMXSIiwhYb7L9f8fGGKrdhkqXG48Bj8fgNoZPHrq51ffp98QvInbgP8AZwDZggYh8ZoxZ1dr7+s+36yk7+TZe+zGnzrwwu40wh42yE8dz0X/nERPuIC7CSUy4g5gIBzHhDmIP/HTWmRYT4SDSaUesY/L+tJ6z/y7GmnczGoMxBo/H4PJ4cLs9uDwGt9vgcntwewwVVS5KK12UVlZTVuWipMJFWaWb0ioXxWVVFFe6KC6rpqiymuKyahh8HW9/swpXtZsqtwcbBofbhdPtIszjIr3vhfzxvjcJ81jTnO5qwtwuoqoriK4qJ6ayjJiqcmKqyoiuKiehvJjU0j10KN3LMaV7SCwvxsZvx+B2huHp0QPnuSN59Lu5dL/7UfJ79qE6Ske9Ur5VLcKWgSeyZeCJAIQX76PTqsWkrl9FSs5aeuXv4Mj3XsTm+e2OYI/NTklyGmXxiawvzKfLkBPZ4Yghx4SzrdrOOnGy1BlBmTMCT2QkUYlxxCTFk5gQQ1JCFPGxkURFRxATFUF0dAQx0RE4wp3Yw8KwhztxOBzY7TYcdhvVHg/VHqh2G6rc1slXldtDSYWLoopqispd7Cuv9j6vZp/3UVReTenJt/PC3I0HEn5tEYldWv33GYgz/sHAemPMRgAReRe4AGj1xH/Hl88y8ZUXcNhrHqbBymXe37Dbg9hsCOZAnhZjMIB4l5EaCXz/OcH+aTUTY1ME6ytOPfc1BpTHbqc6KprquASqk1PhyH44O3XEdOkMnTtZ9XN69cKekYHdbkX/Rv8sbjim4VGulPKlyth4Ng0ZzqYhwwHrG8Wjb88hLncrcfk7iMvbQWz+DmILcoko3kvsjs10W7+CboWFDN23zy8xehCM91uEgQPPEcEgiIBB8BgrB+FdXmosuzcpjREZma0emzRaY8MHRORSYJQx5kbv66uBIcaY22otNw4Y5315JLDGx6GlAM0YaaLN0OMJbno8wa29HE83Y0xq7YlBe3HXGPMC4Lei6yKSbYxpN6ewejzBTY8nuLW346ktEPdGbwdqNlpleKcppZTyg0Ak/gVAbxHpLiJhwBjgswDEoZRSIcnvTT3GGJeI3AZMx7rO+YoxZqW/46hHexvLT48nuOnxBLf2djwH8fvFXaWUUoGl9U+VUirEaOJXSqkQE1KJX0SSRGSmiKzz/kxsYLmvRWSviHxRa/prIrJJRJZ4H/39E3n9WuF4uovIzyKyXkTe815sD5gWHM9Y7zLrRGRsjenficiaGu9Pmv+iPyi+Ud441ovIxHrmh3t/3+u9v//MGvPu9U5fIyJn1l43EA71eEQkU0TKa7wfz/k79vo043hOEZFFIuLy3ndUc169n702x3hLCYTCA3gMmOh9PhF4tIHlTgPOA76oNf014NJAH0crHs/7wBjv8+eAW4P9eIAkYKP3Z6L3eaJ33ndAVoCPwQ5sAHoAYcBSoG+tZf4APOd9PgZ4z/u8r3f5cKC7dzv2Nnw8mcCKQMZ/iMeTCRwLvF7z772xz15be4TUGT9WaYip3udTgQvrW8gYMxso9ldQh+GQj0esilQjgA+bWt+PmnM8ZwIzjTG7jTF7gJnAKD/F1xwHSpIYY6qA/SVJaqp5nB8Cp3nfjwuAd40xlcaYTcB67/YC6XCOJxg1eTzGmBxjzDLAU2vdYP/sNVuoJf50Y8xO7/Nc4FCKxD8sIstE5EkRCW/F2A7F4RxPMrDXGOPyvt4GNDzeoX8053g6A1trvK4d96veZoW/Bij5NBXfQct4f//7sN6P5qzrb4dzPADdRWSxiMwRkZN9HWwzHM7vOBjfn0MStCUbDpWIzAI61DPrvpovjDFGRFral/VerIQUhtXPdwLw4KHE2Vw+Ph6/8/Hx/N4Ys11EYoGPgKuxvq6rwNgJdDXG7BKRgcAnItLPGFMU6MBCXbtL/MaY0xuaJyJ5ItLRGLNTRDoC+S3c9v6z0UoReRX4f4cRanP36avj2QUkiIjDe5bml9IZrXA824HhNV5nYLXtY4zZ7v1ZLCJvY32t93fib05Jkv3LbBMRBxCP9X4EYzmTQz4eYzWMVwIYYxaKyAbgCCDb51E37HB+xw1+9tqaUGvq+QzYfyV+LPBpS1b2JqP97eMXAitaNbqWO+Tj8f5Rfgvs77XQ4t+HDzTneKYDI0Uk0dvrZyQwXUQcIpICICJO4FwC8/40pyRJzeO8FPjG+358Bozx9pLpDvQGfvFT3A055OMRkVSxxt9ARHpgHc9GP8XdkMMpGVPvZ89HcfpWoK8u+/OB1e44G1gHzAKSvNOzsEYC27/c90ABUI7Vjnemd/o3wHKshPImENPGj6cHVmJZD3wAhLeR47neG/N64DrvtGhgIbAMWIl3hLcAHcfZwFqs3iP3eac9CJzvfR7h/X2v9/7+e9RY9z7vemuAswL5fhzu8QCXeN+LJcAi4LxAH0szj2eQ9++kFOub2MrGPntt8aElG5RSKsSEWlOPUkqFPE38SikVYjTxK6VUiNHEr5RSIUYTv1JKhRhN/KpdE5GSVtjGcBHZ5y0F8auITGnGOneKSNTh7lspX9DEr1TzfG+M6Q8cD5wrIic2sfydQIsSv/euV6V8Tj9oKuSINY7Cc1iJeQNwvTFmj4gMAl7Gqso4E+sGqqNrrmuMKReRJXiLc4nISOABrFLKG4DrsG7y6QR8KyKFxpjfiUiJMSbGu86lwLnGmGtF5DWgAusfyjwRSQKKsG5a6wD82RjzIUq1Ij3jV6HodWCCMeZYrDuxJ3unvwrc7D2zd9e3ovdW/d7AXG+JiL8ApxtjBmDVoLnLGPMvYAfwO2PM75oRTwYwzBhzl/d1R+AkrLITjxzKASrVGE38KqSISDyQYIyZ4500FThFRBKAWGPMfO/0t2uterKILMUq1DXdGJMLnIA1eMo877eAsUC3QwjrA2NMzX80nxhjPMaYVRxa6XClGqVNPUo1z/fGmHO9xdN+EpH3AcEamOOKZqxfszZKRK15pbVeV9Z4HqwDmqg2TM/4VUgxxuwD9tQYFORqYI4xZi9QLCJDvNPHNLD+JqzmlwnAT8CJItILQESiReQI76LFQGyNVfNE5CgRsQEXtepBKdVCesav2rsoEdlW4/U/sZpknvN2t9yIdUEW4AbgRRHxAHOwRpKqz3NYYzFEA9cC79QYje0vWJUfXwC+FpEd3nb+icAXWFVSs4GY1jk8pVpOq3Mq5SUiMcaYEu/ziUBHY8wdAQ5LqVanZ/xK/eYcEbkX6+9iM9bZvFLtjp7xK6VUiNGLu0opFWI08SulVIjRxK+UUiFGE79SSoUYTfxKKRVi/j9/s4/FzVLHpgAAAABJRU5ErkJggg==\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Plot a histogram to show the distribution of log return of Microsoft's stock. \n",
+    "\n",
+    "density = pd.DataFrame()\n",
+    "density['x'] = np.arange(ms['LogReturn'].min(), ms['LogReturn'].max(), 0.001)\n",
+    "density['pdf'] = norm.pdf(density['x'], mu, sigma)\n",
+    "\n",
+    "sns.histplot(ms['LogReturn'], kde = True, stat = 'density')\n",
+    "plt.plot(density['x'], density['pdf'], color='red')\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "ujriM3cVvf2M"
+   },
+   "source": [
+    "**Insight:**  As can be seen in the above plot, there are two curves red and blue. Blue curve represents the shape of data distribution and red curve represnts the PDF ( Probability density function ). This data is approximately normal. Thus, We can assume this data distribution as normal and apply other calculation of PDF and CDF based on normality assumption"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "GP40qyu5vjGk"
+   },
+   "source": [
+    "As we already discussed that stock price represents the growth of the company and increasing or decreasing of stock price will effect the market value of the company. If anyone  would like  to buy the shares of the company then he  will  be interested in knowing the probability of increment or decrement of stock price. This probability can be calculated using CDF. Lets understand CDF.\n",
+    "\n",
+    "\n",
+    "**CDF:** of a Random variable ( X ) is the probability that X  will take the value less than or equal to x. It can be represented mathematically as -\n",
+    "\n",
+    "> ## $F_x (x) = P(X \\leq x) $\n",
+    "\n",
+    "The library scipy.stats provides a function called cdf() to calculate the CDF of any distribution. Here, we assumed our data to be normal distribution so we can use norm.cdf() to calculate cumulative probability density for a normal distribution"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "w8IyvRKMTlFb"
+   },
+   "source": [
+    "## Calculating Probabilities"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "tRz6vjDrvsGs"
+   },
+   "source": [
+    "### a) What is the probability that the stock price will drop over 5% in a day? "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "6fLGSnLjTlFc",
+    "outputId": "9dfa0e81-0002-402e-ef8b-8ed3f9c4b103"
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "The required probability that the stock price will drop over 5% in a day is 0.033181437344865984\n"
+     ]
+    }
+   ],
+   "source": [
+    "# We are to calculate P(X<=-0.05)\n",
+    "prob_drop5_day = norm.cdf(-0.05,loc=mu, scale=sigma)\n",
+    "print('The required probability that the stock price will drop over 5% in a day is '+ str(prob_drop5_day))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "9vHXiYsev1hG"
+   },
+   "source": [
+    "### b) What is the probability that the stock price will drop over 10% in a day?\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "NAglidNITlFc",
+    "outputId": "87fe8f82-8aa2-45f4-9554-d0f0635a64fd",
+    "scrolled": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "The probability that the stock price will drop over 10% in a day is 0.0001428695000257634\n"
+     ]
+    }
+   ],
+   "source": [
+    "# We are to calculate P(X<=-0.10)\n",
+    "prob_drop10_day=norm.cdf(-0.10, loc=mu, scale = sigma)\n",
+    "print('The probability that the stock price will drop over 10% in a day is '+str(prob_drop10_day))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "qv-FACUTTlFc"
+   },
+   "source": [
+    "### c) What is the probability that the stock price will drop over 50% in a year? \n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "XDZgjWQITlFc"
+   },
+   "source": [
+    "While, considering the volatility of stock price for a year, we have to calculate the annual standard deviation.Therefore, we will have to annualize the standard deviation calculated using the periodic data."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "qqGaajzmTlFc"
+   },
+   "source": [
+    "Here, we shall assume that there are 250 trading days in a year. Depending on weekends and public holidays, this number may vary between 250 and 260."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "fJuRzuWZTlFc"
+   },
+   "source": [
+    "The annualized standard deviation of daily returns is calculated as follows:\n",
+    "\n",
+    "> Annualized Standard Deviation = Standard Deviation of Daily Returns * Square Root (250)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Note: For more details on the above formula for annualized standard deviation, please refer to this [article](https://financetrain.com/calculate-annualized-standard-deviation).**"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "dDbM-D9lTlFd"
+   },
+   "source": [
+    "For yearly calculation, mean can be calculated as:\n",
+    "> Annual Mean = Mean of Daily Returns * 250"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "0gqSRlidv19t",
+    "outputId": "aeb8ae79-9228-4996-c7d4-9cacd67feb84"
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "The probability that the stock price will drop over 50% in a year is 0.03366022235185039\n"
+     ]
+    }
+   ],
+   "source": [
+    "# calculating mean and standard deviation for yearly log-return\n",
+    "mu_yearly = mu * 250\n",
+    "sigma_yearly = sigma * np.sqrt(250) \n",
+    "# We are to calculate P(X<=0.5)\n",
+    "prob_drop50_year=norm.cdf(-0.5, mu_yearly, sigma_yearly)\n",
+    "print('The probability that the stock price will drop over 50% in a year is '+ str(prob_drop50_year) )"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "yUdyxWFMTlFd"
+   },
+   "source": [
+    "### d) What is the probability that the stock price will drop over 25% in a year?\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "VGhYmioBTlFd",
+    "outputId": "c07d8ab0-808e-4c46-fd59-e35dad84b238"
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "The probability that the stock price will drop over 25% in a year is 0.10331797034715662\n"
+     ]
+    }
+   ],
+   "source": [
+    "# We are to calculate P(X<=25)\n",
+    "prob_drop25_year=norm.cdf(-0.25, mu_yearly, sigma_yearly)\n",
+    "print('The probability that the stock price will drop over 25% in a year is '+ str(prob_drop25_year))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "fvnEkJLbv-Up"
+   },
+   "source": [
+    "### e) What is the 50th percentile  of the yearly stock price?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "cMb1QWKJTlFe"
+   },
+   "source": [
+    "The 50th percentile is the value which has a cumulative probability density of 50% or 0.50\n",
+    "We can calculate the percentile values using the function norm.ppf()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "wKqk2Z58wj2V",
+    "outputId": "882bccb8-81a7-4387-8c21-ce05c006db4d"
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.30715621781524466"
+      ]
+     },
+     "execution_count": 14,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# We are to calculate x such that P(X<=x)=0.50\n",
+    "norm.ppf(0.50, loc=mu_yearly, scale=sigma_yearly)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "VH4FbhyIwogc"
+   },
+   "source": [
+    "### Conclusion\n",
+    "\n",
+    "From the above calculation, It is clear that the probability of decrement in stock price of Microsoft is very less. Therefore, It is safe to invest in the shares of Microsoft."
+   ]
+  }
+ ],
+ "metadata": {
+  "colab": {
+   "collapsed_sections": [
+    "rx8Lxdtwu_6N",
+    "YMBPTY9yvKpL",
+    "eLLivqwrvUru",
+    "JvFccvmivaqD",
+    "w8IyvRKMTlFb",
+    "tRz6vjDrvsGs",
+    "9vHXiYsev1hG",
+    "qv-FACUTTlFc",
+    "yUdyxWFMTlFd",
+    "fvnEkJLbv-Up"
+   ],
+   "name": "Mircrosoft_Stock_Price_Case_Study-1.ipynb",
+   "provenance": []
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.8"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 1
+}
